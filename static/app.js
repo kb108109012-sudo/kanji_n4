@@ -1,4 +1,7 @@
-const CSV_PATH = 'assests/kanji.csv';
+const DECKS = [
+  { id: 1, name: 'Deck 1 (N4)', path: 'assests/kanji.csv' },
+  { id: 2, name: 'Deck 2 (Kanji 5-10)', path: 'assests/kanji6to10.csv' }
+];
 
 const el = id => document.getElementById(id);
 const cardEl = el('card');
@@ -14,6 +17,8 @@ const shuffleBtn = el('shuffle');
 
 let cards = [];
 let index = 0;
+let currentDeckId = 1;
+let decksData = {};
 
 function parseCSV(text){
   const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
@@ -67,6 +72,30 @@ nextBtn.addEventListener('click', nextCard);
 prevBtn.addEventListener('click', prevCard);
 shuffleBtn.addEventListener('click', shuffle);
 
+// Deck selector event listeners
+document.getElementById('deck-1').addEventListener('click', () => switchDeck(1));
+document.getElementById('deck-2').addEventListener('click', () => switchDeck(2));
+
+function switchDeck(deckId) {
+  currentDeckId = deckId;
+  
+  // Update button styles
+  document.querySelectorAll('.deck-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  document.getElementById('deck-' + deckId).classList.add('active');
+  
+  // Switch to the deck data
+  cards = decksData[deckId] || [];
+  index = 0;
+  
+  if (cards.length > 0) {
+    showCard(0);
+  } else {
+    statusEl.textContent = 'Deck loading...';
+  }
+}
+
 cardEl.addEventListener('click', flipCard);
 document.addEventListener('keydown', (e)=>{
   if(e.code === 'ArrowRight') nextCard();
@@ -74,13 +103,25 @@ document.addEventListener('keydown', (e)=>{
   if(e.code === 'Space') { e.preventDefault(); flipCard(); }
 });
 
-fetch(CSV_PATH).then(r=>{
+fetch(DECKS[0].path).then(r=>{
   if(!r.ok) throw new Error('Failed to load CSV: '+r.status);
   return r.text();
 }).then(text=>{
-  cards = parseCSV(text);
-  if(cards.length===0) statusEl.textContent = 'No cards found in CSV';
-  showCard(0);
+  decksData[1] = parseCSV(text);
+  if(decksData[1].length===0) statusEl.textContent = 'No cards found in Deck 1';
+  
+  // Load second deck
+  return fetch(DECKS[1].path).then(r=>{
+    if(!r.ok) throw new Error('Failed to load second CSV: '+r.status);
+    return r.text();
+  }).then(text=>{
+    decksData[2] = parseCSV(text);
+    
+    // Initialize with first deck
+    cards = decksData[1];
+    if(cards.length===0) statusEl.textContent = 'No cards found in any deck';
+    showCard(0);
+  });
 }).catch(err=>{
   statusEl.textContent = 'Error loading cards. See console.';
   console.error(err);

@@ -1,5 +1,5 @@
 const DECKS = [
-  { id: 1, name: 'Deck 1 (N4)', path: 'assests/kanji.csv' },
+  { id: 1, name: 'Deck 1 (N4)', path: 'assets/kanji.csv' },
   { id: 2, name: 'Deck 2 (Kanji 5-10)', path: 'assets/kanji6to10.csv' }
 ];
 

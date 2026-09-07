@@ -23,8 +23,28 @@ let decksData = {};
 function parseCSV(text){
   const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);
   const out = lines.map(line => {
-    // naive CSV split on commas, safe for this dataset
-    const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    const cols = [];
+    let value = '';
+    let quoted = false;
+
+    for(let i=0;i<line.length;i++){
+      const char = line[i];
+      if(char === '"'){
+        if(quoted && line[i+1] === '"'){
+          value += '"';
+          i++;
+        } else {
+          quoted = !quoted;
+        }
+      } else if(char === ',' && !quoted){
+        cols.push(value.trim());
+        value = '';
+      } else {
+        value += char;
+      }
+    }
+    cols.push(value.trim());
+
     const front = cols[0] || '';
     // column 2: reading / kana; column 3: meaning (English)
     const reading = cols[1] || '';
